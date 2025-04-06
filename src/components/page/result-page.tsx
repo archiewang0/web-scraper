@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Loading from "../ui/loading";
 
 interface ScrapeResult {
   name: string;
@@ -38,11 +38,7 @@ export default function ResultsPage() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="container max-w-5xl py-10 text-center">
-        <p>Loading results...</p>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (!scrapeData) {
@@ -108,10 +104,9 @@ export default function ResultsPage() {
             <Card key={index} className="overflow-hidden flex flex-col">
               {item.img && (
                 <div className="relative w-full h-48">
-                  <Image
+                  <img
                     src={item.img || "/placeholder.svg"}
                     alt={item.title || `Image ${index + 1}`}
-                    fill
                     className="object-cover"
                     onError={(e) => {
                       // Fallback for broken images

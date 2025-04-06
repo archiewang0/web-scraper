@@ -28,11 +28,14 @@ enum fieldTypesEnums {
 
 export default function SettingPage() {
   const router = useRouter();
-  const [url, setUrl] = useState("");
-  const [name, setName] = useState("");
+  const [url, setUrl] = useState(
+    "https://www.dalang.tw/%e5%8f%b0%e5%8c%97%e6%af%8d%e8%a6%aa%e7%af%80%e9%a4%90%e5%bb%b3%e5%9a%b4%e9%81%b8%e6%8e%a8%e8%96%a6%ef%bc%8c13%e9%96%93%e5%a5%bd%e8%a9%95%e5%90%8d%e5%ba%97%ef%bc%8c%e7%82%ba%e5%aa%bd%e5%aa%bd%e7%8d%bb/"
+  );
+  const [name, setName] = useState("母親節");
   const [fields, setFields] = useState([
-    { id: 1, type: "title", selector: "" },
-    { id: 2, type: "url", selector: "" },
+    { id: 1, type: "title", selector: ".tag-post-title" },
+    { id: 2, type: "url", selector: ".tag-post-more > a" },
+    { id: 3, type: "img", selector: ".tag-post-img > img" },
   ]);
   const [isLoading, setIsLoading] = useState(false);
 
