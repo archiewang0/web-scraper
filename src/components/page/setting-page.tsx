@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PlusCircle, MinusCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,21 +14,35 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { RequiredSignal } from "../ui/reqireed-icon";
-// import { scrapeWebsite } from "./actions";
+import { scrapeWebsite } from "@/app/actions/scrape-web";
+
+enum fieldTypesEnums {
+  title = "title",
+  url = "url",
+  img = "img",
+  time = "time",
+  content = "content",
+}
 
 export default function SettingPage() {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [fields, setFields] = useState([
-    { id: 1, type: "title", selector: "", checked: true },
-    { id: 2, type: "url", selector: "", checked: true },
+    { id: 1, type: "title", selector: "" },
+    { id: 2, type: "url", selector: "" },
   ]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fieldTypes = ["title", "url", "img", "time", "content"];
+  const fieldTypes: fieldTypesEnums[] = [
+    fieldTypesEnums.title,
+    fieldTypesEnums.url,
+    fieldTypesEnums.img,
+    fieldTypesEnums.time,
+    fieldTypesEnums.content,
+  ];
   const availableFields = fieldTypes.filter(
     (type) => !fields.find((field) => field.type === type)
   );
@@ -39,10 +53,7 @@ export default function SettingPage() {
     const nextType = availableFields[0];
     if (!nextType) return;
 
-    setFields([
-      ...fields,
-      { id: Date.now(), type: nextType, selector: "", checked: false },
-    ]);
+    setFields([...fields, { id: Date.now(), type: nextType, selector: "" }]);
   };
 
   const removeField = (id: number) => {
@@ -62,33 +73,49 @@ export default function SettingPage() {
 
     if (!url) return;
 
-    const selectedFields = fields.filter((field) => field.checked);
-    if (selectedFields.length === 0) return;
+    const selectedFields = fields.filter((field) => {
+      if (field.type === fieldTypesEnums.title && field.selector.length === 0)
+        return false;
+      if (field.type === fieldTypesEnums.url && field.selector.length === 0)
+        return false;
+      return field.selector.length > 0;
+    });
+    if (selectedFields.length === 0 || selectedFields.length === 1) return;
 
     setIsLoading(true);
 
-    // try {
-    //   const result = await scrapeWebsite({
-    //     url,
-    //     name: name || "Untitled Scrape",
-    //     fields: selectedFields.map((field) => ({
-    //       type: field.type,
-    //       selector: field.selector,
-    //     })),
-    //   });
+    try {
+      const result = await scrapeWebsite({
+        url,
+        name: name || "Untitled Scrape",
+        fields: selectedFields.map((field) => ({
+          type: field.type,
+          selector: field.selector,
+        })),
+      });
 
-    //   // Store the result in sessionStorage to pass to the results page
-    //   sessionStorage.setItem("scrapeResult", JSON.stringify(result));
-    router.push("/results");
-    // } catch (error) {
-    //   console.error("Scraping failed:", error);
-    //   alert(
-    //     "Failed to scrape the website. Please check the URL and selectors."
-    //   );
-    // } finally {
-    //   setIsLoading(false);
-    // }
+      // Store the result in sessionStorage to pass to the results page
+      sessionStorage.setItem("scrapeResult", JSON.stringify(result));
+      router.push("/results");
+    } catch (error) {
+      console.error("Scraping failed:", error);
+      alert(
+        "Failed to scrape the website. Please check the URL and selectors."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const checkTitleAndUrlFieldsHasValue = useCallback(() => {
+    for (const field of fields) {
+      if (field.type === fieldTypesEnums.title && field.selector.length === 0)
+        return true;
+      if (field.type === fieldTypesEnums.url && field.selector.length === 0)
+        return true;
+    }
+    return false;
+  }, [fields]);
 
   return (
     <div className="container max-w-3xl py-10">
@@ -143,18 +170,18 @@ export default function SettingPage() {
               <div className="space-y-3">
                 {fields.map((field) => (
                   <div key={field.id} className="flex items-center space-x-3">
-                    <Checkbox
+                    {/* <Checkbox
                       id={`check-${field.id}`}
                       checked={field.checked}
                       onCheckedChange={(checked) =>
                         updateField(field.id, "checked", checked === true)
                       }
-                    />
-                    <div className="grid grid-cols-5 gap-2 flex-1">
-                      <div className="col-span-1">
+                    /> */}
+                    <div className="flex grid-cols-5 gap-2 flex-1 w-96">
+                      <div className=" w-32 flex items-center">
                         <Label>{field.type}</Label>
                       </div>
-                      <div className="col-span-4">
+                      <div className="col-span-4 flex w-full">
                         <Input
                           placeholder={`CSS selector for ${field.type}`}
                           value={field.selector}
@@ -191,7 +218,7 @@ export default function SettingPage() {
             type="submit"
             className="w-full"
             onClick={handleSubmit}
-            disabled={isLoading || !url}
+            disabled={isLoading || !url || checkTitleAndUrlFieldsHasValue()}
           >
             {isLoading ? "Scraping..." : "Start Scraping"}
             {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}

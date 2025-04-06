@@ -3,6 +3,10 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import Image from "next/image";
+import spiderGif from "../../public/spider.gif";
+import computerAndSpider from "../../public/computer_spider.png";
+
 export default function Page() {
   // const getFoods = async () => {
   //   const res = await fetch("/api/get-foods");
@@ -19,6 +23,14 @@ export default function Page() {
   return (
     <main className="flex min-h-screen flex-col items-center p-8 sm:p-24">
       <div className="flex flex-col sm:flex-row gap-4">
+        <Image src={spiderGif} width={500} height={500} alt="spider" />
+        <Image src={computerAndSpider} width={500} height={500} alt="spider" />
+        {/* <Image
+          src="https://wimg.588ku.com/gif620/21/09/28/924ae8e6b7d2c46ff8154c535ac1b371.gif"
+          width={500}
+          height={500}
+          alt="spider"
+        /> */}
         <Link href="/setting">
           <Button
             // onClick={async () => {
