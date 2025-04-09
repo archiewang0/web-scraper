@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ResultsPage from "@/components/page/result-page";
+import ResultsPage from "@/features/result-page";
 
 export const metadata: Metadata = {
   title: "爬蟲結果頁",

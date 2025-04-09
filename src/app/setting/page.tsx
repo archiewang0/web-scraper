@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import SettingPage from "@/components/page/setting-page";
+import SettingPage from "@/features/setting-page";
 
 export const metadata: Metadata = {
   title: "設定爬蟲",

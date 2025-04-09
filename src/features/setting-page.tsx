@@ -15,15 +15,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 // import { Checkbox } from "@/components/ui/checkbox";
-import { RequiredSignal } from "../ui/reqireed-icon";
+import { RequiredSignal } from "../components/ui/reqireed-icon";
 import { scrapeWebsite } from "@/app/actions/scrape-web";
+import { arrayToObject } from "@/lib/utils";
 
-enum fieldTypesEnums {
+export enum fieldTypesEnums {
   title = "title",
   url = "url",
   img = "img",
   time = "time",
   content = "content",
+  parent = "parent",
+}
+
+interface Field {
+  id: number;
+  type: fieldTypesEnums;
+  selector: string;
 }
 
 export default function SettingPage() {
@@ -32,10 +40,11 @@ export default function SettingPage() {
     "https://www.dalang.tw/%e5%8f%b0%e5%8c%97%e6%af%8d%e8%a6%aa%e7%af%80%e9%a4%90%e5%bb%b3%e5%9a%b4%e9%81%b8%e6%8e%a8%e8%96%a6%ef%bc%8c13%e9%96%93%e5%a5%bd%e8%a9%95%e5%90%8d%e5%ba%97%ef%bc%8c%e7%82%ba%e5%aa%bd%e5%aa%bd%e7%8d%bb/"
   );
   const [name, setName] = useState("母親節");
-  const [fields, setFields] = useState([
-    { id: 1, type: "title", selector: ".tag-post-title" },
-    { id: 2, type: "url", selector: ".tag-post-more > a" },
-    { id: 3, type: "img", selector: ".tag-post-img > img" },
+  const [fields, setFields] = useState<Field[]>([
+    { id: 1, type: fieldTypesEnums.parent, selector: ".tag-post-area" },
+    { id: 2, type: fieldTypesEnums.title, selector: ".tag-post-title" },
+    { id: 3, type: fieldTypesEnums.url, selector: ".tag-post-more > a" },
+    { id: 4, type: fieldTypesEnums.img, selector: ".tag-post-img > img" },
   ]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,6 +54,7 @@ export default function SettingPage() {
     fieldTypesEnums.img,
     fieldTypesEnums.time,
     fieldTypesEnums.content,
+    fieldTypesEnums.parent,
   ];
   const availableFields = fieldTypes.filter(
     (type) => !fields.find((field) => field.type === type)
@@ -91,12 +101,10 @@ export default function SettingPage() {
       const result = await scrapeWebsite({
         url,
         name: name || "Untitled Scrape",
-        fields: selectedFields.map((field) => ({
-          type: field.type,
-          selector: field.selector,
-        })),
+        fields: arrayToObject(selectedFields),
       });
 
+      console.log("查看reulst: ", result);
       // Store the result in sessionStorage to pass to the results page
       sessionStorage.setItem("scrapeResult", JSON.stringify(result));
       router.push("/results");

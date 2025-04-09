@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import Loading from "../ui/loading";
+import Loading from "../components/ui/loading";
 
 interface ScrapeResult {
   name: string;
@@ -25,7 +25,6 @@ export default function ResultsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get the scrape result from sessionStorage
     const storedData = sessionStorage.getItem("scrapeResult");
     if (storedData) {
       try {
