@@ -23,6 +23,7 @@ export default function Page() {
   return (
     <main className="flex min-h-screen flex-col items-center p-8 sm:p-24">
       <div className="flex flex-col sm:flex-row gap-4">
+        <div className="bg-orange-500">test</div>
         {/* <Image src={spiderGif} width={500} height={500} alt="spider" /> */}
         <Image src={computerAndSpider} width={500} height={500} alt="spider" />
         <Link href="/setting">
