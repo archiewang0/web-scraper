@@ -107,12 +107,11 @@ export default function SettingPage() {
         try {
             const result = await scrapeWebsite2({
                 url,
-                name: name || 'Untitled Scrape',
+                name: name || `${decodeURI(url).slice(0, 30)}...`,
                 fields: arrayToObject(selectedFields),
             })
 
             console.log('查看reulst: ', result)
-            // Store the result in sessionStorage to pass to the results page
             sessionStorage.setItem('scrapeResult', JSON.stringify(result))
             router.push('/results')
         } catch (error) {
@@ -219,6 +218,7 @@ export default function SettingPage() {
                                             </div>
                                         </div>
                                         {field.type !== 'title' &&
+                                            field.type !== 'parent' &&
                                             field.type !== 'url' && (
                                                 <Button
                                                     type="button"
