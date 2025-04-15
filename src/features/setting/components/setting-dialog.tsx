@@ -27,19 +27,37 @@ interface SettingDialogProps {
     isOpen: boolean
     setIsOpen: (isOpen: boolean) => void
     onSave: (config: { name: string; url: string; fields: Field[] }) => void
-    onUpdate?: (config: { id: string; name: string; url: string; fields: Field[] }) => void
-    initialData: { id: string; name: string; url: string; fields: Field[] } | null
+    onUpdate?: (config: {
+        id: string
+        name: string
+        url: string
+        fields: Field[]
+    }) => void
+    initialData: {
+        id: string
+        name: string
+        url: string
+        fields: Field[]
+    } | null
 }
 
-export function SettingDialog({ isOpen, setIsOpen, onSave, onUpdate, initialData }: SettingDialogProps) {
+export function SettingDialog({
+    isOpen,
+    setIsOpen,
+    onSave,
+    onUpdate,
+    initialData,
+}: SettingDialogProps) {
     // 使用初始數據或默認值
     const [url, setUrl] = React.useState(initialData?.url || '')
     const [name, setName] = React.useState(initialData?.name || '')
-    const [fields, setFields] = React.useState<Field[]>(initialData?.fields || [
-        { id: 1, type: fieldTypesEnums.parent, selector: '' },
-        { id: 2, type: fieldTypesEnums.title, selector: '' },
-        { id: 3, type: fieldTypesEnums.url, selector: '' },
-    ])
+    const [fields, setFields] = React.useState<Field[]>(
+        initialData?.fields || [
+            { id: 1, type: fieldTypesEnums.parent, selector: '' },
+            { id: 2, type: fieldTypesEnums.title, selector: '' },
+            { id: 3, type: fieldTypesEnums.url, selector: '' },
+        ]
+    )
     const [isLoading, setIsLoading] = React.useState(false)
 
     const fieldTypes: fieldTypesEnums[] = [
@@ -55,7 +73,7 @@ export function SettingDialog({ isOpen, setIsOpen, onSave, onUpdate, initialData
     )
 
     const addField = () => {
-        if (fields.length >= 5) return
+        if (fields.length >= 6) return
 
         const nextType = availableFields[0]
         if (!nextType) return
@@ -78,46 +96,55 @@ export function SettingDialog({ isOpen, setIsOpen, onSave, onUpdate, initialData
     // 添加 useEffect 来處理初始數據更新
     React.useEffect(() => {
         if (initialData) {
-            setUrl(initialData.url);
-            setName(initialData.name);
-            setFields(initialData.fields);
+            setUrl(initialData.url)
+            setName(initialData.name)
+            setFields(initialData.fields)
         }
-    }, [initialData]);
+    }, [initialData])
 
     // 重置表單
     const resetForm = () => {
-        setUrl('');
-        setName('');
+        setUrl('')
+        setName('')
         setFields([
             { id: 1, type: fieldTypesEnums.parent, selector: '' },
             { id: 2, type: fieldTypesEnums.title, selector: '' },
             { id: 3, type: fieldTypesEnums.url, selector: '' },
-        ]);
-    };
+        ])
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+        e.preventDefault()
 
-        if (!url) return;
+        if (!url) return
 
         // 驗證必要欄位
         const selectedFields = fields.filter((field) => {
-            if (field.type === fieldTypesEnums.title && field.selector.length === 0)
-                return false;
-            if (field.type === fieldTypesEnums.url && field.selector.length === 0)
-                return false;
-            if (field.type === fieldTypesEnums.parent && field.selector.length === 0)
-                return false;
-            return field.selector.length > 0;
-        });
+            if (
+                field.type === fieldTypesEnums.title &&
+                field.selector.length === 0
+            )
+                return false
+            if (
+                field.type === fieldTypesEnums.url &&
+                field.selector.length === 0
+            )
+                return false
+            if (
+                field.type === fieldTypesEnums.parent &&
+                field.selector.length === 0
+            )
+                return false
+            return field.selector.length > 0
+        })
 
         if (selectedFields.length < 3) {
-            alert('至少需要 parent、title 和 url 欄位才能進行爬蚓');
-            return;
+            alert('至少需要 parent、title 和 url 欄位才能進行爬蚓')
+            return
         }
 
-        setIsLoading(true);
-        
+        setIsLoading(true)
+
         try {
             // 如果是編輯模式
             if (initialData && onUpdate) {
@@ -126,52 +153,58 @@ export function SettingDialog({ isOpen, setIsOpen, onSave, onUpdate, initialData
                     name,
                     url,
                     fields,
-                });
+                })
             } else {
                 // 新增模式
                 onSave({
                     name,
                     url,
                     fields,
-                });
-                resetForm(); // 新增後重置表單
+                })
+                resetForm() // 新增後重置表單
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error:', error)
         } finally {
-            setIsLoading(false);
+            setIsLoading(false)
         }
     }
 
     const checkTitleAndUrlFieldsHasValue = React.useCallback(() => {
         for (const field of fields) {
-            if (field.type === fieldTypesEnums.title && field.selector.length === 0)
-                return true;
-            if (field.type === fieldTypesEnums.url && field.selector.length === 0)
-                return true;
-            if (field.type === fieldTypesEnums.parent && field.selector.length === 0)
-                return true;
+            if (
+                field.type === fieldTypesEnums.title &&
+                field.selector.length === 0
+            )
+                return true
+            if (
+                field.type === fieldTypesEnums.url &&
+                field.selector.length === 0
+            )
+                return true
+            if (
+                field.type === fieldTypesEnums.parent &&
+                field.selector.length === 0
+            )
+                return true
         }
-        return false;
+        return false
     }, [fields])
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            {/* <DialogTrigger asChild>
-                <button className="btn btn-primary">Setting</button>
-            </DialogTrigger> */}
             <DialogContent className=" max-w-screen-md">
-                <DialogTitle>{initialData ? '編輯爬蚓設定' : '新增爬蚓設定'}</DialogTitle>
+                <DialogTitle>
+                    {initialData ? '編輯設定' : '新增設定'}
+                </DialogTitle>
 
-                <div className="container max-w-3xl py-10">
+                <div className="container max-w-3xl py-5">
                     <Card>
-                        {/* <CardHeader>
-                            <CardTitle className="text-2xl">
-                                網頁爬蟲設定
-                            </CardTitle>
-                        </CardHeader> */}
                         <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form
+                                onSubmit={handleSubmit}
+                                className="mt-5 space-y-6"
+                            >
                                 <div className="space-y-2 ">
                                     <Label className="" htmlFor="url">
                                         網頁URL爬蟲目標
@@ -192,8 +225,7 @@ export function SettingDialog({ isOpen, setIsOpen, onSave, onUpdate, initialData
 
                                 <div className="space-y-2">
                                     <Label htmlFor="name">
-                                        {' '}
-                                        🐛🐛名稱 (optional){' '}
+                                        🐛🐛名稱 (optional)
                                     </Label>
                                     <Input
                                         id="name"
@@ -210,7 +242,7 @@ export function SettingDialog({ isOpen, setIsOpen, onSave, onUpdate, initialData
                                         <Label>
                                             Content Selectors (CSS selectors)
                                         </Label>
-                                        {fields.length < 5 && (
+                                        {fields.length < 6 && (
                                             <Button
                                                 type="button"
                                                 variant="outline"
@@ -303,7 +335,11 @@ export function SettingDialog({ isOpen, setIsOpen, onSave, onUpdate, initialData
                                     checkTitleAndUrlFieldsHasValue()
                                 }
                             >
-                                {isLoading ? '處理中...' : initialData ? '更新設定' : '新增設定'}
+                                {isLoading
+                                    ? '處理中...'
+                                    : initialData
+                                    ? '更新設定'
+                                    : '新增設定'}
                                 {!isLoading && (
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 )}

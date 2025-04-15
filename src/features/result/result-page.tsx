@@ -90,7 +90,11 @@ export default function ResultsPage() {
                                         rel="noopener noreferrer"
                                     >
                                         <h1 className="text-3xl text-white font-bold">
-                                            {data.name}
+                                            {data.name ||
+                                                `${decodeURI(data.url).slice(
+                                                    0,
+                                                    30
+                                                )}...`}
                                         </h1>
                                     </a>
 
