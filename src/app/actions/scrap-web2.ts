@@ -1,7 +1,7 @@
 'use server'
 
 import * as cheerio from 'cheerio'
-import { fieldTypesEnums } from '@/features/setting-page'
+import { fieldTypesEnums } from '@/features/setting/components/setting-page'
 
 interface FieldArr {
     type: fieldTypesEnums
