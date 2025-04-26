@@ -80,7 +80,7 @@ export default function ResultsPage() {
 
             {scrapeData.map((data, idx) => {
                 return (
-                    <Collapsible key={idx} className=" w-ful">
+                    <Collapsible key={idx} className=" w-ful mb-10">
                         <CollapsibleTrigger className=" w-full ">
                             <div className=" transition-all shadow-xl p-5  rounded-xl flex items-center justify-between mb-6 w-full bg-gray-400 hover:bg-gray-300/20">
                                 <div className="text-left">
@@ -97,12 +97,6 @@ export default function ResultsPage() {
                                                 )}...`}
                                         </h1>
                                     </a>
-
-                                    <p className="text-sm text-white/90">
-                                        {new Date(
-                                            data.timestamp
-                                        ).toLocaleString()}
-                                    </p>
                                 </div>
 
                                 <div className=" text-white">
