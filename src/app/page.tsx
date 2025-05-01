@@ -28,6 +28,7 @@ export default function Page() {
                     width={500}
                     height={500}
                     alt="spider"
+                    priority={true}
                 />
                 <Link href="/setting">
                     <Button variant="outline" size="lg" className="px-6">
