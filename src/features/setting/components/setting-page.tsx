@@ -1,6 +1,6 @@
 'use client'
 import type React from 'react'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { PlusCircle, ArrowRight, Trash2, Plus, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { scrapeWebsite } from '@/app/actions/scrape-web'
+// import { scrapeWebsite , scrapeWebsiteAll} from '@/app/actions/scrape-web'
 import { arrayToObject } from '@/lib/utils'
 import { SettingDialog } from './setting-dialog'
 import { Field, fieldTypesEnums } from '../types/form.type'
@@ -23,6 +23,8 @@ import { updateUserData } from '@/app/actions/updateUserData'
 import { ToastProvider, Toast, ToastViewport } from '@/components/ui/toast'
 import { useFindUser } from '@/hooks/useFindUser'
 import Loading from '@/components/ui/loading'
+import { useWebScraper } from '@/hooks/useWebScraper'
+import { ScrapeConfigRequest } from '@/features/setting'
 
 // 定義爬蟲設定介面
 
@@ -46,6 +48,20 @@ export default function SettingPage() {
     const findUserResult = useFindUser(session?.user.id)
     const { data: userData, isLoading, isError } = findUserResult
     console.log('data: ', userData)
+
+    const dataForWebScraper = useMemo<ScrapeConfigRequest[]>(() => {
+        return configurations.map((config) => ({
+            name: config.name,
+            url: config.url,
+            fieldsMap: arrayToObject(config.fields),
+        }))
+    }, [configurations])
+
+    const {
+        data: webScraperData,
+        isLoading: webScraperLoading,
+        refetch: webScraperDataRefetch,
+    } = useWebScraper(dataForWebScraper, { enabled: false })
 
     useEffect(() => {
         findUserResult.refetch()
@@ -153,20 +169,20 @@ export default function SettingPage() {
                 JSON.stringify(configurations)
             )
 
+            await webScraperDataRefetch()
             // 對每個配置執行爬蟲
-            const results = await Promise.all(
-                configurations.map(async (config) => {
-                    const result = await scrapeWebsite({
-                        url: config.url,
-                        name: config.name,
-                        fieldsMap: arrayToObject(config.fields),
-                    })
-                    return result
-                })
-            )
-
-            // 儲存結果到 sessionStorage
-            sessionStorage.setItem('scrapeResults', JSON.stringify(results))
+            // const results = await Promise.all(
+            //     configurations.map(async (config) => {
+            //         const result = await scrapeWebsite({
+            //             url: config.url,
+            //             name: config.name,
+            //             fieldsMap: arrayToObject(config.fields),
+            //         })
+            //         return result
+            //     })
+            // )
+            // // 儲存結果到 sessionStorage
+            // sessionStorage.setItem('scrapeResults', JSON.stringify(results))
             router.push('/results')
         } catch (error) {
             console.error('Scraping failed:', error)
@@ -328,14 +344,15 @@ export default function SettingPage() {
                             <Button
                                 className="w-full bg-blue-500 hover:bg-blue-600"
                                 onClick={handleFinish}
-                                disabled={fetchLoading}
+                                disabled={fetchLoading || webScraperLoading}
                             >
-                                {fetchLoading
+                                {fetchLoading || webScraperLoading
                                     ? '處理中...'
                                     : '完成設定並獲取結果'}
-                                {!fetchLoading && (
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                )}
+                                {!fetchLoading ||
+                                    (webScraperLoading && (
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    ))}
                             </Button>
                         </CardFooter>
                     )}

@@ -30,8 +30,6 @@ interface ScrapeResult {
 }
 
 export default function ResultsPage() {
-    // const [scrapeData, setScrapeData] = useState<ScrapeResult[] | null>(null)
-    // const [isLoading, setIsLoading] = useState(true)
     const [scrapeconfig, setScrapeConfig] = useState<ScrapeConfig[]>([])
 
     // // 使用 useMemo 轉換配置，避免不必要的重新計算
