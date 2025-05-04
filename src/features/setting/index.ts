@@ -1,5 +1,5 @@
 import { fieldTypesEnums, Field } from './types/form.type'
-import { ScrapeConfig } from './types/scrapeConfig.type'
+import { ScrapeConfig, ScrapeConfigRequest } from './types/scrapeConfig.type'
 
-export type { Field, ScrapeConfig }
+export type { Field, ScrapeConfig, ScrapeConfigRequest }
 export { fieldTypesEnums }

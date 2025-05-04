@@ -1,20 +1,11 @@
 'use server'
 
 import * as cheerio from 'cheerio'
-import { fieldTypesEnums } from '@/features/setting/types/form.type'
+import { fieldTypesEnums, Fields } from '@/features/setting/types/form.type'
+import { ScrapeConfigRequest } from '@/features/setting'
 interface FieldArr {
     type: fieldTypesEnums
     selector: string
-}
-
-type Fields = {
-    [key in fieldTypesEnums]?: string
-}
-
-interface ScrapeConfig {
-    url: string
-    name: string
-    fields: Fields
 }
 
 interface res {
@@ -22,17 +13,16 @@ interface res {
     url: string
     results: result[]
 }
-interface result {
-    parent: string
-    title: string
-    url: string
-
-    img?: string
-    time?: string
-    content?: string
+interface result extends Fields {
+    // parent: string
+    // title: string
+    // url: string
+    // img?: string
+    // time?: string
+    // content?: string
 }
 
-export async function scrapeWebsite(config: ScrapeConfig): Promise<res> {
+export async function scrapeWebsite(config: ScrapeConfigRequest): Promise<res> {
     try {
         console.log('run there!!!')
         console.log('check config: ', config)
@@ -49,33 +39,37 @@ export async function scrapeWebsite(config: ScrapeConfig): Promise<res> {
         const $ = cheerio.load(html)
 
         // Extract data based on the provided selectors
-        const results: any[] = []
+        const results: result[] = []
 
-        console.log('config.fields.parent: ', config.fields.url)
+        console.log('config.fields.parent: ', config.fieldsMap.url)
 
-        $(config.fields.parent).each((_, element) => {
+        $(config.fieldsMap.parent).each((_, element) => {
             let data: Fields = {}
 
-            if (config.fields.url) {
-                const href = $(element).find(config.fields.url).attr('href')
+            if (config.fieldsMap.url) {
+                const href = $(element).find(config.fieldsMap.url).attr('href')
                 data.url = href ? new URL(href).toString() : ''
             }
 
-            if (config.fields.img) {
-                data.img = $(element).find(config.fields.img).attr('src') || ''
+            if (config.fieldsMap.img) {
+                data.img =
+                    $(element).find(config.fieldsMap.img).attr('src') || ''
             }
 
-            if (config.fields.title) {
-                data.title = $(element).find(config.fields.title).text().trim()
+            if (config.fieldsMap.title) {
+                data.title = $(element)
+                    .find(config.fieldsMap.title)
+                    .text()
+                    .trim()
             }
 
-            if (config.fields.time) {
-                data.time = $(element).find(config.fields.time).text().trim()
+            if (config.fieldsMap.time) {
+                data.time = $(element).find(config.fieldsMap.time).text().trim()
             }
 
-            if (config.fields.content) {
+            if (config.fieldsMap.content) {
                 data.content = $(element)
-                    .find(config.fields.content)
+                    .find(config.fieldsMap.content)
                     .text()
                     .trim()
             }
@@ -87,6 +81,89 @@ export async function scrapeWebsite(config: ScrapeConfig): Promise<res> {
             url: config.url,
             results,
         }
+    } catch (error) {
+        console.error('Scraping error:', error)
+        throw new Error(`Failed to scrape website: ${(error as Error).message}`)
+    }
+}
+
+export async function scrapeWebsiteAll(
+    configs: ScrapeConfigRequest[]
+): Promise<res[]> {
+    try {
+        const allsettled = await Promise.allSettled(
+            configs.map(async (config) => {
+                console.log('run there!!!')
+                console.log('check config: ', config)
+
+                // Fetch the HTML content
+                const response = await fetch(config.url)
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to fetch ${config.url}: ${response.statusText}`
+                    )
+                }
+
+                const html = await response.text()
+                const $ = cheerio.load(html)
+
+                // Extract data based on the provided selectors
+                const results: result[] = []
+
+                console.log('config.fields.parent: ', config.fieldsMap.url)
+
+                $(config.fieldsMap.parent).each((_, element) => {
+                    let data: Fields = {}
+
+                    if (config.fieldsMap.url) {
+                        const href = $(element)
+                            .find(config.fieldsMap.url)
+                            .attr('href')
+                        data.url = href ? new URL(href).toString() : ''
+                    }
+
+                    if (config.fieldsMap.img) {
+                        data.img =
+                            $(element).find(config.fieldsMap.img).attr('src') ||
+                            ''
+                    }
+
+                    if (config.fieldsMap.title) {
+                        data.title = $(element)
+                            .find(config.fieldsMap.title)
+                            .text()
+                            .trim()
+                    }
+
+                    if (config.fieldsMap.time) {
+                        data.time = $(element)
+                            .find(config.fieldsMap.time)
+                            .text()
+                            .trim()
+                    }
+
+                    if (config.fieldsMap.content) {
+                        data.content = $(element)
+                            .find(config.fieldsMap.content)
+                            .text()
+                            .trim()
+                    }
+                    results.push(data)
+                })
+
+                return {
+                    name: config.name,
+                    url: config.url,
+                    results,
+                }
+            })
+        )
+
+        const successRes = allsettled
+            .filter((item) => item.status === 'fulfilled')
+            .map((item) => item.value)
+
+        return successRes
     } catch (error) {
         console.error('Scraping error:', error)
         throw new Error(`Failed to scrape website: ${(error as Error).message}`)

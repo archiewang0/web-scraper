@@ -21,6 +21,8 @@ import { finduser } from '@/app/actions/finduser'
 import { ScrapeConfig } from '@/features/setting'
 import { updateUserData } from '@/app/actions/updateUserData'
 import { ToastProvider, Toast, ToastViewport } from '@/components/ui/toast'
+import { useFindUser } from '@/hooks/useFindUser'
+import Loading from '@/components/ui/loading'
 
 // 定義爬蟲設定介面
 
@@ -31,14 +33,23 @@ export default function SettingPage() {
     const [editingConfig, setEditingConfig] = useState<ScrapeConfig | null>(
         null
     )
-    const [isLoading, setIsLoading] = useState(false)
     const { data: session, status } = useSession()
 
     const [openToast, setOpenToast] = useState(false)
     const [toastInfo, setToastInfo] = useState('')
-
     const [isSaveData, setIsSaveData] = useState(false)
-    const [getDbData, setGetDbData] = useState(false)
+    // const [getDbData, setGetDbData] = useState(false)
+
+    const [fetchLoading, setFetchLoading] = useState(false)
+    // 確保 useFindUser hook 每次都被調用，即使 session?.user.id 可能是 undefined
+    // 這樣可以確保 hooks 的調用順序一致
+    const findUserResult = useFindUser(session?.user.id)
+    const { data: userData, isLoading, isError } = findUserResult
+    console.log('data: ', userData)
+
+    useEffect(() => {
+        findUserResult.refetch()
+    }, [session])
 
     // 從 sessionStorage 載入設定
     useEffect(() => {
@@ -56,30 +67,20 @@ export default function SettingPage() {
         }
     }, [])
 
-    const getUserData = async () => {
-        const user = await finduser({ userId: session!.user.id })
-        if (!user) return
-        return user
-    }
-
     useEffect(() => {
         if (session?.user.id) {
-            setGetDbData(true)
-
-            getUserData().then((user) => {
-                setConfigurations(
-                    user?.scraperDatas
-                        ? user.scraperDatas.map((config) => ({
+            setConfigurations(
+                userData && 'scraperDatas' in userData
+                    ? userData.scraperDatas
+                        ? userData.scraperDatas.map((config) => ({
                               ...config,
                               name: config.name ?? '',
                           }))
                         : []
-                )
-
-                setGetDbData(false)
-            })
+                    : []
+            )
         }
-    }, [session])
+    }, [userData, session])
 
     // 儲存設定到 sessionStorage
     const saveConfigurations = async () => {
@@ -143,10 +144,8 @@ export default function SettingPage() {
     // 處理完成設定並前往結果頁面
     const handleFinish = async () => {
         if (configurations.length === 0) return
-        setIsLoading(true)
-
+        setFetchLoading(true)
         // console.log('configurations: ', configurations)
-
         try {
             // 儲存當前設定
             sessionStorage.setItem(
@@ -160,7 +159,7 @@ export default function SettingPage() {
                     const result = await scrapeWebsite({
                         url: config.url,
                         name: config.name,
-                        fields: arrayToObject(config.fields),
+                        fieldsMap: arrayToObject(config.fields),
                     })
                     return result
                 })
@@ -175,7 +174,7 @@ export default function SettingPage() {
                 'Failed to scrape the websites. Please check your configurations.'
             )
         } finally {
-            setIsLoading(false)
+            setFetchLoading(false)
         }
     }
 
@@ -185,8 +184,10 @@ export default function SettingPage() {
         setIsDialogOpen(true)
     }
 
+    // 將 ConfigurationsRender 提取為純函數組件，避免在條件語句中使用 Hooks
     const ConfigurationsRender = () => {
-        if (getDbData || status === 'loading')
+        // 不再在此組件內部使用條件句調用 hooks，而是直接渲染並使用 props 傳遞的值
+        if (isLoading || status === 'loading')
             return <Skeleton count={5} width={150} height={30} />
 
         return (
@@ -258,6 +259,16 @@ export default function SettingPage() {
         )
     }
 
+    // 將所有 hooks 調用移至組件開頭後，再進行條件渲染判斷
+    // 這樣可以確保 hooks 調用順序一致
+
+    // 將所有條件渲染放在一起處理
+    // 在確保所有 hooks 已經調用後再進行條件跳轉
+    // 這樣可以確保 hooks 的調用順序在不同渲染間保持一致
+    if (isLoading) {
+        return <Loading />
+    }
+
     return (
         <div className="container max-w-4xl py-10">
             <ToastProvider swipeDirection="up">
@@ -317,10 +328,12 @@ export default function SettingPage() {
                             <Button
                                 className="w-full bg-blue-500 hover:bg-blue-600"
                                 onClick={handleFinish}
-                                disabled={isLoading}
+                                disabled={fetchLoading}
                             >
-                                {isLoading ? '處理中...' : '完成設定並獲取結果'}
-                                {!isLoading && (
+                                {fetchLoading
+                                    ? '處理中...'
+                                    : '完成設定並獲取結果'}
+                                {!fetchLoading && (
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 )}
                             </Button>

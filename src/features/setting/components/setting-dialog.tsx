@@ -7,6 +7,7 @@ import {
     DialogClose,
     DialogFooter,
     DialogTrigger,
+    DialogDescription,
 } from '@/components/ui/dialog'
 import {
     Card,

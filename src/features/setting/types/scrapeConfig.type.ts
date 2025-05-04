@@ -1,10 +1,17 @@
-import { Field } from './form.type'
+import { Field, Fields } from './form.type'
 
-interface ScrapeConfig {
-    id: string
-    name: string
+interface CommonConfig {
     url: string
+    name: string
+}
+
+interface ScrapeConfig extends CommonConfig {
+    id: string
     fields: Field[]
 }
 
-export type { ScrapeConfig }
+interface ScrapeConfigRequest extends CommonConfig {
+    fieldsMap: Fields
+}
+
+export type { ScrapeConfig, ScrapeConfigRequest }

@@ -2,16 +2,36 @@
 
 import connectDB from '@/lib/mongodb'
 import ModelUser from '@/models/user'
-import { IUser } from '@/models/user'
+import { IUser, ScraperData } from '@/models/user'
 
-export async function finduser({ userId }: { userId: string }) {
+export interface UserRes {
+    id: string
+    name: string
+    email: string
+    userId: string
+    scraperDatas: ScraperData[]
+    createdAt?: string
+    updatedAt?: string
+}
+
+// export interface ScraperDatas extends {}
+
+export interface ErrorRes {
+    error: string
+}
+
+export async function finduser({
+    userId,
+}: {
+    userId?: string
+}): Promise<UserRes | ErrorRes> {
+    if (!userId) {
+        return { error: 'User ID is required' }
+    }
+
     await connectDB()
-
     try {
-        const user: IUser | null = await ModelUser.findOne(
-            { userId: userId }
-            // { 'canvas.drawElements.roughElement': 0 } // 排除 roughElement 欄位
-        )
+        const user: IUser | null = await ModelUser.findOne({ userId: userId })
 
         if (!user) {
             return { error: 'User not found' }
@@ -33,6 +53,6 @@ export async function finduser({ userId }: { userId: string }) {
         }
     } catch (error) {
         console.error('Error fetching user:', error)
-        return null
+        return { error: 'User not found' }
     }
 }

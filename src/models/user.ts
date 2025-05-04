@@ -8,12 +8,14 @@ import {
 } from 'mongoose'
 import { Field } from '@/features/setting'
 
-export interface ScraperData extends Document {
+export interface ScraperData {
     id: string
     name?: string
     url: string
     fields: Field[]
 }
+
+export interface DocScraperData extends Omit<ScraperData, 'id'>, Document {}
 
 const ScraperDataSchema = new Schema({
     id: { type: String, required: true },
@@ -27,7 +29,7 @@ export interface IUser extends Document {
     userId: string
     name: string
     email: string
-    scraperDatas: ScraperData[]
+    scraperDatas: DocScraperData[]
     createdAt?: Date
     updatedAt?: Date
 }

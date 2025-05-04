@@ -13,5 +13,9 @@ interface Field {
     selector: string
 }
 
-export type { Field }
+type Fields = {
+    [key in fieldTypesEnums]?: string
+}
+
+export type { Field, Fields }
 export { fieldTypesEnums }

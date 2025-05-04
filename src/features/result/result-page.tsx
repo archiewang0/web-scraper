@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -17,33 +17,57 @@ import {
     CollapsibleTrigger,
     CollapsibleContent,
 } from '@/components/ui/collapsible'
+import { useWebScraper } from '@/hooks/useWebScraper'
+// import { ScrapeConfigRequest } from '../setting'
+// import { fieldTypesEnums } from '../setting'
+import { ScrapeConfig } from '../setting'
+import { isValidScrapeConfig, convertMultipleConfigs } from '../setting/utils'
 
 interface ScrapeResult {
     name: string
     url: string
-    timestamp: string
     results: Record<string, string>[]
 }
 
 export default function ResultsPage() {
-    const [scrapeData, setScrapeData] = useState<ScrapeResult[] | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
+    // const [scrapeData, setScrapeData] = useState<ScrapeResult[] | null>(null)
+    // const [isLoading, setIsLoading] = useState(true)
+    const [scrapeconfig, setScrapeConfig] = useState<ScrapeConfig[]>([])
+
+    // // 使用 useMemo 轉換配置，避免不必要的重新計算
+    const apiConfigs = useMemo(() => {
+        // 過濾無效的配置
+        const validConfigs = scrapeconfig.filter((item) =>
+            isValidScrapeConfig(item)
+        )
+        // 轉換為 API 需要的格式
+        return convertMultipleConfigs(validConfigs)
+    }, [scrapeconfig])
+
+    const webscrapers = useWebScraper(apiConfigs, {
+        enabled: true, // 是否自動執行查詢
+        refetchInterval: false, // 自動重新獲取間隔 (ms)
+        staleTime: 10 * 60 * 1000, // 數據被視為過期的時間 (ms)
+        cacheTime: 15 * 60 * 1000, // 未使用的查詢結果被移除的時間 (ms)
+    })
+
+    const { isLoading, isError, data: scrapeData = [] } = webscrapers
 
     useEffect(() => {
-        const storedData = sessionStorage.getItem('scrapeResults')
-        if (storedData) {
-            try {
-                setScrapeData(JSON.parse(storedData))
-            } catch (error) {
-                console.error('Failed to parse scrape data:', error)
-            }
-        }
+        const scrapeconfig = sessionStorage.getItem('savedScrapeConfigs')
+        if (scrapeconfig) {
+            const config = JSON.parse(scrapeconfig) as ScrapeConfig[]
 
-        setIsLoading(false)
+            setScrapeConfig(config)
+        }
     }, [])
 
     if (isLoading) {
         return <Loading />
+    }
+
+    if (isError) {
+        return <p>抓取資料錯誤!!</p>
     }
 
     if (!scrapeData) {

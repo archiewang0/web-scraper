@@ -4,6 +4,7 @@ import './globals.css'
 import { NavBar } from '@/components/layout/navbar'
 import { AuthProvider } from '@/components/layout/auth-provider'
 import 'react-loading-skeleton/dist/skeleton.css'
+import { QueryProvider } from '@/components/layout/query-provider'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -30,10 +31,12 @@ export default function RootLayout({
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-400`}
             >
-                <AuthProvider>
-                    <NavBar />
-                    <main className="flex-grow">{children}</main>
-                </AuthProvider>
+                <QueryProvider>
+                    <AuthProvider>
+                        <NavBar />
+                        <main className="flex-grow">{children}</main>
+                    </AuthProvider>
+                </QueryProvider>
             </body>
         </html>
     )
