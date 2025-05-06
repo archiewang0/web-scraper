@@ -25,6 +25,7 @@ import { useFindUser } from '@/hooks/useFindUser'
 import Loading from '@/components/ui/loading'
 import { useWebScraper } from '@/hooks/useWebScraper'
 import { ScrapeConfigRequest } from '@/features/setting'
+import { useWebScraperMutation } from '@/hooks/useWebScraper'
 
 // 定義爬蟲設定介面
 
@@ -47,7 +48,8 @@ export default function SettingPage() {
     // 這樣可以確保 hooks 的調用順序一致
     const findUserResult = useFindUser(session?.user.id)
     const { data: userData, isLoading, isError } = findUserResult
-    console.log('data: ', userData)
+    const webScraperMutation = useWebScraperMutation()
+    // console.log('data: ', userData)
 
     const dataForWebScraper = useMemo<ScrapeConfigRequest[]>(() => {
         return configurations.map((config) => ({
@@ -57,11 +59,11 @@ export default function SettingPage() {
         }))
     }, [configurations])
 
-    const {
-        data: webScraperData,
-        isLoading: webScraperLoading,
-        refetch: webScraperDataRefetch,
-    } = useWebScraper(dataForWebScraper, { enabled: false })
+    // const {
+    //     data: webScraperData,
+    //     isLoading: webScraperLoading,
+    //     refetch: webScraperDataRefetch,
+    // } = useWebScraper(dataForWebScraper, { enabled: false })
 
     useEffect(() => {
         findUserResult.refetch()
@@ -169,7 +171,7 @@ export default function SettingPage() {
                 JSON.stringify(configurations)
             )
 
-            await webScraperDataRefetch()
+            const data = await webScraperMutation.mutateAsync(dataForWebScraper)
             // 對每個配置執行爬蟲
             // const results = await Promise.all(
             //     configurations.map(async (config) => {
@@ -281,9 +283,9 @@ export default function SettingPage() {
     // 將所有條件渲染放在一起處理
     // 在確保所有 hooks 已經調用後再進行條件跳轉
     // 這樣可以確保 hooks 的調用順序在不同渲染間保持一致
-    if (isLoading) {
-        return <Loading />
-    }
+    // if (isLoading) {
+    //     return <Loading />
+    // }
 
     return (
         <div className="container max-w-4xl py-10">
@@ -344,13 +346,15 @@ export default function SettingPage() {
                             <Button
                                 className="w-full bg-blue-500 hover:bg-blue-600"
                                 onClick={handleFinish}
-                                disabled={fetchLoading || webScraperLoading}
+                                disabled={
+                                    fetchLoading || webScraperMutation.isPending
+                                }
                             >
-                                {fetchLoading || webScraperLoading
+                                {fetchLoading || webScraperMutation.isPending
                                     ? '處理中...'
                                     : '完成設定並獲取結果'}
                                 {!fetchLoading ||
-                                    (webScraperLoading && (
+                                    (webScraperMutation.isPending && (
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     ))}
                             </Button>

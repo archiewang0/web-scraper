@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import { scrapeWebsite, scrapeWebsiteAll } from '@/app/actions/scrape-web'
 import { ScrapeConfigRequest } from '@/features/setting'
 import { Fields } from '@/features/setting/types/form.type'
@@ -29,5 +29,11 @@ export function useWebScraper(
     return useQuery({
         queryKey: [SCRAPER_KEY, ...config.map((item) => item.name)],
         queryFn: () => scrapeWebsiteAll(config),
+    })
+}
+
+export function useWebScraperMutation() {
+    return useMutation({
+        mutationFn: scrapeWebsiteAll,
     })
 }
